@@ -98,16 +98,19 @@ export default function BuildForm() {
     }
   }
 
-  const handleSendData = () => {
+  const handleSendData = React.useCallback(() => {
     if (image && !(mcqs.length === 0)) {
       console.log("Ready to Go");
 
       const formData = new FormData();
       formData.append("image", image);
-      formData.append("mcqs", mcqs);
+      for(var key in mcqs) {
+        var value = mcqs[key];
+        formData.append(key, value);
+      }
 
       axios
-        .post("api_call", formData, {
+        .post("http://localhost/api_call.php", formData, {
           headers: {
             "Content-Type": "multipart/form-data",
           },
@@ -117,7 +120,7 @@ export default function BuildForm() {
         })
         .catch((err) => console.log(err));
     }
-  };
+  },[image,mcqs]);
 
   const handleQuizCount = (e) => {
     setQuizCount(e.target.value);
@@ -126,12 +129,13 @@ export default function BuildForm() {
   const handleNext = () => {
     setActiveStep(activeStep + 1);
 
-    if (activeStep === steps.length - 1) handleSendData();
+    // if (activeStep === steps.length - 1) handleSendData();
   };
 
   React.useEffect(() => {
     console.log(activeStep);
-  }, [activeStep]);
+    if (activeStep === steps.length) handleSendData();
+  }, [activeStep,handleSendData]);
 
   const handleBack = () => {
     setActiveStep(activeStep - 1);
