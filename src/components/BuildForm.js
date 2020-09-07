@@ -70,6 +70,8 @@ const useStyles = makeStyles((theme) => ({
 const steps = ["Upload Image", "Quiz Details", "Filling the key"];
 
 export default function BuildForm() {
+  const [displayUrl, setDisplayUrl] = useState("None2");
+
   const classes = useStyles();
   const [image, setImage] = useState(null);
   const [mcqs, setMcqs] = useState({});
@@ -105,8 +107,7 @@ export default function BuildForm() {
       const formData = new FormData();
       formData.append("image", image);
       for(var key in mcqs) {
-        var value = mcqs[key];
-        formData.append(key, value);
+        formData.append(key, mcqs[key]);
       }
 
       axios
@@ -117,6 +118,7 @@ export default function BuildForm() {
         })
         .then((res) => {
           console.log(res);
+          setDisplayUrl("URL");
         })
         .catch((err) => console.log(err));
     }
@@ -170,7 +172,7 @@ export default function BuildForm() {
                   Created Quiz Form successfully.
                 </Typography>
                 <Typography variant="subtitle1">
-                  Please use this link ______ to start the quiz.
+            Please use this link ___{displayUrl}___ to start the quiz.
                 </Typography>
               </React.Fragment>
             ) : (
