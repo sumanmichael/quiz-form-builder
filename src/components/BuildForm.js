@@ -75,7 +75,6 @@ export default function BuildForm() {
   const classes = useStyles();
   const [image, setImage] = useState(null);
   const [mcqs, setMcqs] = useState({});
-  // console.log(image, mcqs);
   const [activeStep, setActiveStep] = React.useState(0);
   const [quizCount, setQuizCount] = React.useState(5);
 
@@ -101,17 +100,18 @@ export default function BuildForm() {
   }
 
   const handleSendData = React.useCallback(() => {
-    if (image && !(mcqs.length === 0)) {
+    if (image && !(Object.keys(mcqs).length === 0)) {
       console.log("Ready to Go");
 
       const formData = new FormData();
       formData.append("image", image);
+      formData.append("length",Object.keys(mcqs).length);
       for(var key in mcqs) {
         formData.append(key, mcqs[key]);
       }
 
       axios
-        .post("http://localhost/api_call.php", formData, {
+        .post("http://localhost:5000/upload", formData, {
           headers: {
             "Content-Type": "multipart/form-data",
           },
@@ -130,13 +130,13 @@ export default function BuildForm() {
 
   const handleNext = () => {
     setActiveStep(activeStep + 1);
-
-    // if (activeStep === steps.length - 1) handleSendData();
   };
 
   React.useEffect(() => {
     console.log(activeStep);
-    if (activeStep === steps.length) handleSendData();
+    if (activeStep === steps.length ){
+      handleSendData();
+    }
   }, [activeStep,handleSendData]);
 
   const handleBack = () => {
