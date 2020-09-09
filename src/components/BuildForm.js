@@ -12,6 +12,7 @@ import StepLabel from "@material-ui/core/StepLabel";
 import Button from "@material-ui/core/Button";
 import Link from "@material-ui/core/Link";
 import Typography from "@material-ui/core/Typography";
+import { LinearProgress } from "@material-ui/core";
 // import InsertImage from './InsertImage'
 import UploadButton from "./UploadButton";
 import RadioButtons from "./RadioButtons";
@@ -75,8 +76,10 @@ export default function BuildForm() {
   const classes = useStyles();
   const [image, setImage] = useState(null);
   const [mcqs, setMcqs] = useState({});
+  const [showLoader, setShowLoader] = useState(false);
   const [activeStep, setActiveStep] = React.useState(0);
   const [quizCount, setQuizCount] = React.useState(5);
+  const [quizName, setQuizName] = React.useState("Quiz 1");
 
   function getStepContent(step, handleQuizCount, quizCount) {
     switch (step) {
@@ -84,7 +87,12 @@ export default function BuildForm() {
         return <UploadButton handleInputImage={(image) => setImage(image)} />;
       case 1:
         return (
-          <DetailsEntry onChange={handleQuizCount} quizCount={quizCount} />
+          <DetailsEntry
+            onQuizCountChange={handleQuizCount}
+            quizCount={quizCount}
+            onQuizNameChange={handleQuizName}
+            quizName={quizName}
+          />
         );
       case 2:
         return (
@@ -100,15 +108,17 @@ export default function BuildForm() {
   }
 
   const handleSendData = React.useCallback(() => {
-    if (image && !(Object.keys(mcqs).length === 0)) {
+    if (image && !(Object.keys(mcqs).length === 0) && quizName !== "") {
       console.log("Ready to Go");
 
       const formData = new FormData();
+      formData.append("quizName", quizName);
       formData.append("image", image);
-      formData.append("length",Object.keys(mcqs).length);
-      for(var key in mcqs) {
-        formData.append(key, mcqs[key]);
-      }
+      for (let key in mcqs) formData.append("ans", mcqs[key]);
+      // formData.append("length", Object.keys(mcqs).length);
+      // for (var key in mcqs) {
+      //   formData.append(key, mcqs[key]);
+      // }
 
       axios
         .post("http://localhost:5000/upload", formData, {
@@ -118,28 +128,43 @@ export default function BuildForm() {
         })
         .then((res) => {
           console.log(res);
+          setShowLoader(false);
+          setActiveStep(activeStep + 1);
           setDisplayUrl("URL");
         })
-        .catch((err) => console.log(err));
+        .catch((err) => {
+          console.log(err);
+        });
     }
-  },[image,mcqs]);
+  }, [image, mcqs, quizName, setShowLoader, activeStep, setActiveStep]);
 
   const handleQuizCount = (e) => {
     setQuizCount(e.target.value);
   };
 
-  const handleNext = () => {
-    setActiveStep(activeStep + 1);
+  const handleQuizName = (e) => {
+    setQuizName(e.target.value);
   };
 
-  React.useEffect(() => {
-    console.log(activeStep);
-    if (activeStep === steps.length ){
+  const handleNext = () => {
+    if (activeStep === steps.length - 1) {
+      setShowLoader(true);
       handleSendData();
+    } else {
+      setShowLoader(false);
+      setActiveStep(activeStep + 1);
     }
-  }, [activeStep,handleSendData]);
+  };
+
+  // React.useEffect(() => {
+  //   console.log(activeStep);
+  //   if (activeStep === steps.length) {
+  //     handleSendData();
+  //   }
+  // }, [activeStep, handleSendData]);
 
   const handleBack = () => {
+    setShowLoader(false);
     setActiveStep(activeStep - 1);
   };
 
@@ -166,13 +191,14 @@ export default function BuildForm() {
             ))}
           </Stepper>
           <React.Fragment>
+            {showLoader && <LinearProgress />}
             {activeStep === steps.length ? (
               <React.Fragment>
                 <Typography variant="h5" gutterBottom>
                   Created Quiz Form successfully.
                 </Typography>
                 <Typography variant="subtitle1">
-            Please use this link ___{displayUrl}___ to start the quiz.
+                  Please use this link ___{displayUrl}___ to start the quiz.
                 </Typography>
               </React.Fragment>
             ) : (
